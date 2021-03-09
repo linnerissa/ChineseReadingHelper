@@ -13,14 +13,18 @@ app.get("/segmentation", (req, res) => {
   res.send({ express: segmentedPhrase });
 });
 
-const getNewsSourceInChinese = function () {
+var article;
+const getNewsSourceInChinese = async () => {
   console.log("GetNewsSource");
   const fetch = require("node-fetch");
-  return fetch("http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm")
+  article = await fetch(
+    "http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm"
+  )
     .then((data) => data.text())
     .catch((error) => {
       console.log("Failed to get news source in chinese", error);
     });
+  return article;
 };
 
 const parseHTMLBody = (htmlBody) => {
@@ -50,7 +54,11 @@ const segmentBody = (text) => {
     // record the next start index of the characters
     phraseStartIndex += cutRes[index].length;
   }
-  return { segmentedBody, startIndices };
+  return {
+    segments: segmentedBody,
+    startIndices: startIndices,
+    original: text,
+  };
 };
 
 const applyPinYinToChunk = (segmentedChunk) => {
@@ -59,13 +67,13 @@ const applyPinYinToChunk = (segmentedChunk) => {
   return pronunciation;
 };
 
-const applyTranslationToBody = async (textBody) => {
+const applyTranslation = async (text) => {
   console.log("Translating");
   const fetch = require("node-fetch");
   const res = await fetch("http://localhost:5000/translate", {
     method: "POST",
     body: JSON.stringify({
-      q: textBody,
+      q: text,
       source: "zh",
       target: "en",
     }),
@@ -75,30 +83,56 @@ const applyTranslationToBody = async (textBody) => {
   return response;
 };
 
-const applyPinYinAndTranslation = async (segmentedBodyAndIndices) => {
-  segmentedBody = segmentedBodyAndIndices["segmentedBody"];
+const applyPinYin = async (segmentedBodyAndIndices) => {
+  segmentedBody = segmentedBodyAndIndices["segments"];
   indices = segmentedBodyAndIndices["startIndices"];
-  //translation = await applyTranslationToBody(segmentedBody);
   segmentedBodyAndPinyin = new Array(segmentedBody.length);
   for (i = 0; i < segmentedBody.length; i++) {
     chunk = segmentedBody[i];
+    startIndex = indices[i];
     segmentedBodyAndPinyin[i] = [
       chunk,
       applyPinYinToChunk(chunk),
-      indices[i],
-      // translation["translatedText"][i],
+      [startIndex, startIndex + chunk.length],
     ];
   }
   console.log("returning segemented body and pinyin");
-  return segmentedBodyAndPinyin;
+  return {
+    detailedSegments: segmentedBodyAndPinyin,
+    original: segmentedBodyAndIndices["original"],
+  };
+};
+
+const replaceWithButtons = function (object) {
+  const cheerio = require("cheerio");
+  const $ = cheerio.load(article);
+  segments = object["detailedSegments"];
+  for (i = 0; i < segmentedBody.length; i++) {
+    processed = segments[i];
+    words = processed[0];
+    pronunciation = processed[1];
+    // todo nlin figure out jquery syntax.
+    $("p").text(function () {
+      return $(this).text().replace(words, pronunciation);
+    });
+    //.replaceWith(pronunciation)
+  }
+  return $.html();
 };
 
 app.get("/news", (req, res) => {
   getNewsSourceInChinese()
     .then(parseHTMLBody)
     .then(segmentBody)
-    .then(applyPinYinAndTranslation)
-    .then((data) => res.send({ webpageBody: data }));
+    .then(applyPinYin)
+    .then(replaceWithButtons)
+    .then((data) =>
+      res.send(
+        data
+        // webpageBody: data["detailedSegments"],
+        // original: data["original"],
+      )
+    );
 });
 
 //function CiYu({ word }) {

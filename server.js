@@ -113,7 +113,7 @@ const replaceWithButtons = function (object) {
     pronunciation = processed[1];
     // todo nlin figure out jquery syntax.
     $("p").text(function () {
-      return $(this).text().replace(words, pronunciation);
+      return $(this).text().replace(words, ToolTipButton(words, pronunciation));
     });
     //.replaceWith(pronunciation)
   }
@@ -135,31 +135,27 @@ app.get("/news", (req, res) => {
     );
 });
 
-//function CiYu({ word }) {
-// //   // const [hovered, sethovered] = React.useState(false);
-// //   // const onMouseEnter = () => {
-// //   //   sethovered(true);
-// //   // };
-// //   // const onMouseLeave = () => {
-// //   //   sethovered(false);
-// //   // };
-// //   var pronunciation = PinYin(word);
-// //   var definition = Translator(word, "en");
+function ToolTipButton({ word, pronunciation }) {
+  const [hovered, sethovered] = React.useState(false);
+  const onMouseEnter = () => {
+    sethovered(true);
+  };
+  const onMouseLeave = () => {
+    sethovered(false);
+  };
 
-// //   // const [selected, setSelected] = React.useState(false);
-// //   // return (
-// //   //   <Tooltip title={pronunciation}>
-// //   //     {/* <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-// //   //       {hovered ? "nullnullnull" : word}
-// //   //     </div> */}
-// //   //     <ToggleButton
-// //   //       selected={selected}
-// //   //       onChange={() => {
-// //   //         setSelected(!selected);
-// //   //       }}
-// //   //     >
-// //   //       {selected ? definition : word}
-// //   //     </ToggleButton>
-// //   //   </Tooltip>
-// //   // );
-// // }
+  const [selected, setSelected] = React.useState(false);
+  return (
+    <Tooltip title={pronunciation}>
+      {/* <ToggleButton
+        selected={selected}
+        onChange={() => {
+          setSelected(!selected);
+        }}
+      >
+        {selected ? definition : word}
+      </ToggleButton> */}
+      {word}
+    </Tooltip>
+  );
+}

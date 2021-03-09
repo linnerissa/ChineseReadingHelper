@@ -36,30 +36,21 @@ const parseHTMLBody = (htmlBody) => {
     throw e;
   }
 };
-
-const stripWhitespace = (body) => {
-  const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
-  words = body.split(rePunctuation);
-  return words;
-};
+// const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
 
 var nodejieba = require("nodejieba");
-const segmentBody = (listOfText) => {
+const segmentBody = (text) => {
   segmentedBody = [];
   startIndices = [];
   phraseStartIndex = 0;
-  // listOfText.forEach((element) => {
-  // cutRes = nodejieba.cut(element);
-  cutRes = nodejieba.cut(listOfText);
+  cutRes = nodejieba.cut(text);
   for (index = 0; index < cutRes.length; ++index) {
     startIndices.push(phraseStartIndex);
     segmentedBody.push(cutRes[index]);
     // record the next start index of the characters
     phraseStartIndex += cutRes[index].length;
   }
-  // });
-  console.log(startIndices);
-  return segmentedBody;
+  return { segmentedBody, startIndices };
 };
 
 const applyPinYinToChunk = (segmentedChunk) => {
@@ -84,15 +75,18 @@ const applyTranslationToBody = async (textBody) => {
   return response;
 };
 
-const applyPinYinAndTranslation = async (segmentedBody) => {
-  translation = await applyTranslationToBody(segmentedBody);
+const applyPinYinAndTranslation = async (segmentedBodyAndIndices) => {
+  segmentedBody = segmentedBodyAndIndices["segmentedBody"];
+  indices = segmentedBodyAndIndices["startIndices"];
+  //translation = await applyTranslationToBody(segmentedBody);
   segmentedBodyAndPinyin = new Array(segmentedBody.length);
   for (i = 0; i < segmentedBody.length; i++) {
     chunk = segmentedBody[i];
     segmentedBodyAndPinyin[i] = [
       chunk,
       applyPinYinToChunk(chunk),
-      translation["translatedText"][i],
+      indices[i],
+      // translation["translatedText"][i],
     ];
   }
   console.log("returning segemented body and pinyin");
@@ -102,7 +96,6 @@ const applyPinYinAndTranslation = async (segmentedBody) => {
 app.get("/news", (req, res) => {
   getNewsSourceInChinese()
     .then(parseHTMLBody)
-    // .then(stripWhitespace)
     .then(segmentBody)
     .then(applyPinYinAndTranslation)
     .then((data) => res.send({ webpageBody: data }));

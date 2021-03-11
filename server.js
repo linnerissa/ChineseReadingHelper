@@ -1,19 +1,14 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5001;
 
+app.use(cors());
 // console.log that your server is up and running
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 var nodejieba = require("nodejieba");
-app.get("/segmentation", (req, res) => {
-  let phrase = req.query.phrase;
-  segmentedPhrase = nodejieba.cut(phrase);
-  console.log(segmentedPhrase);
-  res.send({ express: segmentedPhrase });
-});
 
-var article;
 const getNewsSourceInChinese = async () => {
   console.log("GetNewsSource");
   const fetch = require("node-fetch");
@@ -34,7 +29,7 @@ const parseHTMLBody = (htmlBody) => {
     const $ = cheerio.load(htmlBody);
     const text = $.text($("p"));
 
-    return text;
+    return { parsed: text, original: htmlBody };
   } catch (e) {
     console.log(e);
     throw e;
@@ -43,7 +38,8 @@ const parseHTMLBody = (htmlBody) => {
 // const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
 
 var nodejieba = require("nodejieba");
-const segmentBody = (text) => {
+const segmentBody = (object) => {
+  text = object["parsed"];
   segmentedBody = [];
   startIndices = [];
   phraseStartIndex = 0;
@@ -57,7 +53,7 @@ const segmentBody = (text) => {
   return {
     segments: segmentedBody,
     startIndices: startIndices,
-    original: text,
+    original: object["original"],
   };
 };
 
@@ -83,9 +79,9 @@ const applyTranslation = async (text) => {
   return response;
 };
 
-const applyPinYin = async (segmentedBodyAndIndices) => {
-  segmentedBody = segmentedBodyAndIndices["segments"];
-  indices = segmentedBodyAndIndices["startIndices"];
+const applyPinYin = async (object) => {
+  segmentedBody = object["segments"];
+  indices = object["startIndices"];
   segmentedBodyAndPinyin = new Array(segmentedBody.length);
   for (i = 0; i < segmentedBody.length; i++) {
     chunk = segmentedBody[i];
@@ -99,25 +95,8 @@ const applyPinYin = async (segmentedBodyAndIndices) => {
   console.log("returning segemented body and pinyin");
   return {
     detailedSegments: segmentedBodyAndPinyin,
-    original: segmentedBodyAndIndices["original"],
+    original: object["original"],
   };
-};
-
-const replaceWithButtons = function (object) {
-  const cheerio = require("cheerio");
-  const $ = cheerio.load(article);
-  segments = object["detailedSegments"];
-  for (i = 0; i < segmentedBody.length; i++) {
-    processed = segments[i];
-    words = processed[0];
-    pronunciation = processed[1];
-    // todo nlin figure out jquery syntax.
-    $("p").text(function () {
-      return $(this).text().replace(words, ToolTipButton(words, pronunciation));
-    });
-    //.replaceWith(pronunciation)
-  }
-  return $.html();
 };
 
 app.get("/news", (req, res) => {
@@ -125,37 +104,5 @@ app.get("/news", (req, res) => {
     .then(parseHTMLBody)
     .then(segmentBody)
     .then(applyPinYin)
-    .then(replaceWithButtons)
-    .then((data) =>
-      res.send(
-        data
-        // webpageBody: data["detailedSegments"],
-        // original: data["original"],
-      )
-    );
+    .then((data) => res.send(data));
 });
-
-function ToolTipButton({ word, pronunciation }) {
-  const [hovered, sethovered] = React.useState(false);
-  const onMouseEnter = () => {
-    sethovered(true);
-  };
-  const onMouseLeave = () => {
-    sethovered(false);
-  };
-
-  const [selected, setSelected] = React.useState(false);
-  return (
-    <Tooltip title={pronunciation}>
-      {/* <ToggleButton
-        selected={selected}
-        onChange={() => {
-          setSelected(!selected);
-        }}
-      >
-        {selected ? definition : word}
-      </ToggleButton> */}
-      {word}
-    </Tooltip>
-  );
-}

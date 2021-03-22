@@ -65,6 +65,7 @@ const applyPinYinToChunk = (segmentedChunk) => {
 
 const applyTranslation = async (text) => {
   console.log("Translating");
+  console.log(text);
   const fetch = require("node-fetch");
   const res = await fetch("http://localhost:5000/translate", {
     method: "POST",
@@ -105,4 +106,12 @@ app.get("/news", (req, res) => {
     .then(segmentBody)
     .then(applyPinYin)
     .then((data) => res.send(data));
+});
+
+app.get("/translate", (req, res) => {
+  var text = req.query.text;
+  applyTranslation(text).then((data) => {
+    res.send(data);
+    console.log(data);
+  });
 });

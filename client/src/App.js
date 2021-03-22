@@ -4,6 +4,7 @@ import "./App.css";
 import Tooltip from "@material-ui/core/Tooltip";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import { red } from "@material-ui/core/colors";
+import fetch from "node-fetch";
 
 class App extends Component {
   state = {
@@ -34,47 +35,54 @@ class App extends Component {
   };
 
   render() {
-    // <div className="App">
-    //   <header className="App-header">
-    //     <img src={logo} className="App-logo" alt="logo" />
-    //     <h1 className="App-title">Welcome to React</h1>
-    //     <h1 className="NodeJieBa">{this.state.data}</h1>
-    //   </header>
-    //   <p className="App-intro">{this.state.data}</p>
-    // </div>
-    console.log(this.state);
     return (
-      <div class="wrapper">
+      <div class="article">
         {this.state.words.map((item) => (
-          <ToolTipButton word={item[0]} pronunciation={item[1]} />
+          <ToolTipButton
+            class="wordbutton"
+            word={item[0]}
+            pronunciation={item[1]}
+          />
         ))}
       </div>
     );
   }
 }
 
-function ToolTipButton({ word, pronunciation }) {
-  // const [hovered, sethovered] = React.useState(false);
-  // const onMouseEnter = () => {
-  //   sethovered(true);
-  // };
-  // const onMouseLeave = () => {
-  //   sethovered(false);
-  // };
+async function callTranslationAPI(toTranslateText) {
+  var url = new URL("http://localhost:5001/translate");
+  url.searchParams.append("text", toTranslateText);
+  const response = await fetch(url);
+  const body = await response.json();
+  if (response.status !== 200) {
+    throw Error(body.message);
+  }
+  return body;
+}
+
+function ToolTipButton({ onSelected, word, pronunciation, definition }) {
   const [selected, setSelected] = React.useState(false);
+  const [translation, setTranslation] = React.useState("");
   if (pronunciation == word || pronunciation == "") {
     return word;
   }
   return (
     <Tooltip title={pronunciation}>
       <ToggleButton
+        size="small"
         selected={selected}
+        translation={translation}
         onChange={() => {
+          if (translation === "") {
+            callTranslationAPI(word).then((res) => {
+              setTranslation(res["translatedText"]);
+            });
+          }
           setSelected(!selected);
         }}
       >
         {/* selected should get definition of word from server */}
-        {selected ? "definition" : word}
+        {selected ? translation : word}
       </ToggleButton>
     </Tooltip>
   );

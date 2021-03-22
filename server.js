@@ -1,26 +1,25 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5001;
 
+app.use(cors());
 // console.log that your server is up and running
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 var nodejieba = require("nodejieba");
-app.get("/segmentation", (req, res) => {
-  let phrase = req.query.phrase;
-  segmentedPhrase = nodejieba.cut(phrase);
-  console.log(segmentedPhrase);
-  res.send({ express: segmentedPhrase });
-});
 
-const getNewsSourceInChinese = function () {
+const getNewsSourceInChinese = async () => {
   console.log("GetNewsSource");
   const fetch = require("node-fetch");
-  return fetch("http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm")
+  article = await fetch(
+    "http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm"
+  )
     .then((data) => data.text())
     .catch((error) => {
       console.log("Failed to get news source in chinese", error);
     });
+  return article;
 };
 
 const parseHTMLBody = (htmlBody) => {
@@ -30,36 +29,32 @@ const parseHTMLBody = (htmlBody) => {
     const $ = cheerio.load(htmlBody);
     const text = $.text($("p"));
 
-    return text;
+    return { parsed: text, original: htmlBody };
   } catch (e) {
     console.log(e);
     throw e;
   }
 };
-
-const stripWhitespace = (body) => {
-  const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
-  words = body.split(rePunctuation);
-  return words;
-};
+// const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
 
 var nodejieba = require("nodejieba");
-const segmentBody = (listOfText) => {
+const segmentBody = (object) => {
+  text = object["parsed"];
   segmentedBody = [];
   startIndices = [];
   phraseStartIndex = 0;
-  // listOfText.forEach((element) => {
-  // cutRes = nodejieba.cut(element);
-  cutRes = nodejieba.cut(listOfText);
+  cutRes = nodejieba.cut(text);
   for (index = 0; index < cutRes.length; ++index) {
     startIndices.push(phraseStartIndex);
     segmentedBody.push(cutRes[index]);
     // record the next start index of the characters
     phraseStartIndex += cutRes[index].length;
   }
-  // });
-  console.log(startIndices);
-  return segmentedBody;
+  return {
+    segments: segmentedBody,
+    startIndices: startIndices,
+    original: object["original"],
+  };
 };
 
 const applyPinYinToChunk = (segmentedChunk) => {
@@ -68,13 +63,14 @@ const applyPinYinToChunk = (segmentedChunk) => {
   return pronunciation;
 };
 
-const applyTranslationToBody = async (textBody) => {
+const applyTranslation = async (text) => {
   console.log("Translating");
+  console.log(text);
   const fetch = require("node-fetch");
   const res = await fetch("http://localhost:5000/translate", {
     method: "POST",
     body: JSON.stringify({
-      q: textBody,
+      q: text,
       source: "zh",
       target: "en",
     }),
@@ -84,55 +80,38 @@ const applyTranslationToBody = async (textBody) => {
   return response;
 };
 
-const applyPinYinAndTranslation = async (segmentedBody) => {
-  translation = await applyTranslationToBody(segmentedBody);
+const applyPinYin = async (object) => {
+  segmentedBody = object["segments"];
+  indices = object["startIndices"];
   segmentedBodyAndPinyin = new Array(segmentedBody.length);
   for (i = 0; i < segmentedBody.length; i++) {
     chunk = segmentedBody[i];
+    startIndex = indices[i];
     segmentedBodyAndPinyin[i] = [
       chunk,
       applyPinYinToChunk(chunk),
-      translation["translatedText"][i],
+      [startIndex, startIndex + chunk.length],
     ];
   }
   console.log("returning segemented body and pinyin");
-  return segmentedBodyAndPinyin;
+  return {
+    detailedSegments: segmentedBodyAndPinyin,
+    original: object["original"],
+  };
 };
 
 app.get("/news", (req, res) => {
   getNewsSourceInChinese()
     .then(parseHTMLBody)
-    // .then(stripWhitespace)
     .then(segmentBody)
-    .then(applyPinYinAndTranslation)
-    .then((data) => res.send({ webpageBody: data }));
+    .then(applyPinYin)
+    .then((data) => res.send(data));
 });
 
-//function CiYu({ word }) {
-// //   // const [hovered, sethovered] = React.useState(false);
-// //   // const onMouseEnter = () => {
-// //   //   sethovered(true);
-// //   // };
-// //   // const onMouseLeave = () => {
-// //   //   sethovered(false);
-// //   // };
-// //   var pronunciation = PinYin(word);
-// //   var definition = Translator(word, "en");
-
-// //   // const [selected, setSelected] = React.useState(false);
-// //   // return (
-// //   //   <Tooltip title={pronunciation}>
-// //   //     {/* <div onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-// //   //       {hovered ? "nullnullnull" : word}
-// //   //     </div> */}
-// //   //     <ToggleButton
-// //   //       selected={selected}
-// //   //       onChange={() => {
-// //   //         setSelected(!selected);
-// //   //       }}
-// //   //     >
-// //   //       {selected ? definition : word}
-// //   //     </ToggleButton>
-// //   //   </Tooltip>
-// //   // );
-// // }
+app.get("/translate", (req, res) => {
+  var text = req.query.text;
+  applyTranslation(text).then((data) => {
+    res.send(data);
+    console.log(data);
+  });
+});

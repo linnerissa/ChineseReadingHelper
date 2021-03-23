@@ -50,7 +50,7 @@ class App extends Component {
 }
 
 async function callTranslationAPI(toTranslateText) {
-  var url = new URL("http://localhost:5001/translate");
+  var url = new URL("/translate");
   url.searchParams.append("text", toTranslateText);
   const response = await fetch(url);
   const body = await response.json();

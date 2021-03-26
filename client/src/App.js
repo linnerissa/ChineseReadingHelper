@@ -16,6 +16,7 @@ class App extends Component {
       .then((res) => {
         console.log(res);
         this.setState({ data: res.original, words: res.detailedSegments });
+        this.replaceMainBody();
       })
       .catch((err) => console.log(err));
   }
@@ -31,17 +32,42 @@ class App extends Component {
   };
 
   render() {
-    return (
-      <div class="article">
-        {this.state.words.map((item) => (
-          <ToolTipButton
-            class="wordbutton"
-            word={item[0]}
-            pronunciation={item[1]}
-          />
-        ))}
-      </div>
-    );
+    return <div dangerouslySetInnerHTML={{ __html: this.state.data }} />;
+    // return (
+    //   <div class="article">
+    //     {this.state.words.map((item) => (
+    //       <ToolTipButton
+    //         class="wordbutton"
+    //         word={item[0]}
+    //         pronunciation={item[1]}
+    //       />
+    //     ))}
+    //   </div>
+    // );
+  }
+
+  replaceMainBody() {
+    const cheerio = require("cheerio");
+    const $ = cheerio.load(this.state.data);
+    this.state.words.forEach((item) => {
+      //console.log(item);
+      // $("p").text(function () {
+      //   return $(this)
+      //     .text()
+      //     .replace(
+      //       item[0],
+      //       '<div class="article">\
+      //       <ToolTipButton\
+      //         class="wordbutton"\
+      //         word={item[0]}\
+      //         pronunciation={item[1]}\
+      //       />\
+      //     </div>'
+      //     );
+      // });
+      $("p").replaceWith();
+    });
+    this.setState({ data: $.html() });
   }
 }
 
@@ -83,22 +109,5 @@ function ToolTipButton({ onSelected, word, pronunciation, definition }) {
     </Tooltip>
   );
 }
-
-// const replaceWithButtons = function (object) {
-//   const cheerio = require("cheerio");
-//   const $ = cheerio.load(article);
-//   segments = object["detailedSegments"];
-//   for (i = 0; i < segmentedBody.length; i++) {
-//     processed = segments[i];
-//     words = processed[0];
-//     pronunciation = processed[1];
-//     // todo nlin figure out jquery syntax.
-//     $("p").text(function () {
-//       return $(this).text().replace(words, ToolTipButton(words, pronunciation));
-//     });
-//     //.replaceWith(pronunciation)
-//   }
-//   return $.html();
-// };
 
 export default App;

@@ -3,6 +3,7 @@ import "./App.css";
 import Tooltip from "@material-ui/core/Tooltip";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import fetch from "node-fetch";
+import ReactDOM from "react-dom";
 
 class App extends Component {
   state = {
@@ -32,7 +33,14 @@ class App extends Component {
   };
 
   render() {
-    return <div dangerouslySetInnerHTML={{ __html: this.state.data }} />;
+    const body = <div dangerouslySetInnerHTML={{ __html: this.state.data }} />;
+    if (this.state.data != null) {
+      ReactDOM.render(
+        this.state.data,
+        document.getElementsByClassName("article")
+      );
+    }
+    return body;
     // return (
     //   <div class="article">
     //     {this.state.words.map((item) => (
@@ -50,22 +58,22 @@ class App extends Component {
     const cheerio = require("cheerio");
     const $ = cheerio.load(this.state.data);
     this.state.words.forEach((item) => {
-      //console.log(item);
-      // $("p").text(function () {
-      //   return $(this)
-      //     .text()
-      //     .replace(
-      //       item[0],
-      //       '<div class="article">\
-      //       <ToolTipButton\
-      //         class="wordbutton"\
-      //         word={item[0]}\
-      //         pronunciation={item[1]}\
-      //       />\
-      //     </div>'
-      //     );
-      // });
-      $("p").replaceWith();
+      console.log(item);
+      $("p").text(function () {
+        return $(this)
+          .text()
+          .replace(
+            item[0],
+            '<div class="article">\
+            <ToolTipButton\
+              class="wordbutton"\
+              word={item[0]}\
+              pronunciation={item[1]}\
+            />\
+          </div>'
+          );
+      });
+      // $("p").replaceWith();
     });
     this.setState({ data: $.html() });
   }

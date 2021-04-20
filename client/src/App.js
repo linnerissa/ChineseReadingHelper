@@ -3,7 +3,6 @@ import "./App.css";
 import Tooltip from "@material-ui/core/Tooltip";
 import ToggleButton from "@material-ui/lab/ToggleButton";
 import fetch from "node-fetch";
-import ReactDOM from "react-dom";
 
 class App extends Component {
   state = {
@@ -17,13 +16,17 @@ class App extends Component {
       .then((res) => {
         console.log(res);
         this.setState({ data: res.original, words: res.detailedSegments });
-        this.replaceMainBody();
       })
       .catch((err) => console.log(err));
   }
   // Fetches our GET route from the Express server. (Note the route we are fetching matches the GET route from server.js
   callBackendAPI = async () => {
-    const response = await fetch("/news");
+    const response = await fetch("/news", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
     const body = await response.json();
 
     if (response.status !== 200) {
@@ -33,56 +36,27 @@ class App extends Component {
   };
 
   render() {
-    const body = <div dangerouslySetInnerHTML={{ __html: this.state.data }} />;
-    if (this.state.data != null) {
-      ReactDOM.render(
-        this.state.data,
-        document.getElementsByClassName("article")
-      );
-    }
-    return body;
-    // return (
-    //   <div class="article">
-    //     {this.state.words.map((item) => (
-    //       <ToolTipButton
-    //         class="wordbutton"
-    //         word={item[0]}
-    //         pronunciation={item[1]}
-    //       />
-    //     ))}
-    //   </div>
-    // );
-  }
-
-  replaceMainBody() {
-    const cheerio = require("cheerio");
-    const $ = cheerio.load(this.state.data);
-    this.state.words.forEach((item) => {
-      console.log(item);
-      $("p").text(function () {
-        return $(this)
-          .text()
-          .replace(
-            item[0],
-            '<div class="article">\
-            <ToolTipButton\
-              class="wordbutton"\
-              word={item[0]}\
-              pronunciation={item[1]}\
-            />\
-          </div>'
-          );
-      });
-      // $("p").replaceWith();
-    });
-    this.setState({ data: $.html() });
+    return (
+      <div class="article">
+        {this.state.words.map((item) => (
+          <ToolTipButton
+            class="wordbutton"
+            word={item[0]}
+            pronunciation={item[1]}
+          />
+        ))}
+      </div>
+    );
   }
 }
 
 async function callTranslationAPI(toTranslateText) {
-  // var url = new URL("/translate");
-  // url.searchParams.append("text", toTranslateText);
-  const response = await fetch("/translate?text=" + toTranslateText);
+  const response = await fetch("/translate?text=" + toTranslateText, {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
   const body = await response.json();
   if (response.status !== 200) {
     throw Error(body.message);

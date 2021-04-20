@@ -19,6 +19,7 @@
     "node-fetch": "^2.6.1",
     "nodejieba": "^2.5.1",
     "nodemon": "^2.0.7",
+    "path": "^0.12.7",
     "pinyin": "^2.9.1",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",

@@ -1,10 +1,20 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5001;
 
 app.use(cors());
-// console.log that your server is up and running
+app.use(express.static(path.join(__dirname, "client", "build")));
+app.use(express.static("public"));
+// this line errors...
+// app.use((req, res, next) => {
+//   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+// });
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "client/public", "index.html"));
+});
+
 app.listen(port, () => console.log(`Listening on port ${port}`));
 
 var nodejieba = require("nodejieba");
@@ -35,7 +45,6 @@ const parseHTMLBody = (htmlBody) => {
     throw e;
   }
 };
-// const rePunctuation = /\p{Han}(?<=\p{Block=CJK_Symbols_And_Punctuation})/;
 
 var nodejieba = require("nodejieba");
 const segmentBody = (object) => {
@@ -47,7 +56,6 @@ const segmentBody = (object) => {
   for (index = 0; index < cutRes.length; ++index) {
     startIndices.push(phraseStartIndex);
     segmentedBody.push(cutRes[index]);
-    // record the next start index of the characters
     phraseStartIndex += cutRes[index].length;
   }
   return {

@@ -7,11 +7,12 @@ const port = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.static(path.join(__dirname, "client", "build")));
 app.use(express.static("public"));
-// this line errors...
-// app.use((req, res, next) => {
-//   res.sendFile(path.join(__dirname, "client", "build", "index.html"));
-// });
 app.get("/", (req, res) => {
+  console.log("serving build");
+  res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+});
+app.get("/", (req, res) => {
+  console.log("serving public");
   res.sendFile(path.join(__dirname, "client/public", "index.html"));
 });
 
@@ -33,7 +34,6 @@ const getNewsSourceInChinese = async () => {
 };
 
 const parseHTMLBody = (htmlBody) => {
-  console.log("ParseHTMLBody");
   const cheerio = require("cheerio");
   try {
     const $ = cheerio.load(htmlBody);
@@ -71,21 +71,21 @@ const applyPinYinToChunk = (segmentedChunk) => {
   return pronunciation;
 };
 
-const applyTranslation = async (text) => {
-  console.log("Translating");
-  console.log(text);
-  const fetch = require("node-fetch");
-  const res = await fetch("http://localhost:5000/translate", {
-    method: "POST",
-    body: JSON.stringify({
-      q: text,
-      source: "zh",
-      target: "en",
-    }),
-    headers: { "Content-Type": "application/json" },
-  }).catch((err) => console.log("failed to translate %s", err));
-  const response = await res.json();
-  return response;
+var fanyi = require("fanyi");
+const applyTranslation = async (text, res, cb) => {
+  fanyi(
+    text,
+    {
+      iciba: false,
+      youdao: true,
+      dictionaryapi: false,
+      say: false,
+      color: false,
+    },
+    (data) => {
+      cb(data, res);
+    }
+  );
 };
 
 const applyPinYin = async (object) => {
@@ -101,7 +101,6 @@ const applyPinYin = async (object) => {
       [startIndex, startIndex + chunk.length],
     ];
   }
-  console.log("returning segemented body and pinyin");
   return {
     detailedSegments: segmentedBodyAndPinyin,
     original: object["original"],
@@ -118,8 +117,7 @@ app.get("/news", (req, res) => {
 
 app.get("/translate", (req, res) => {
   var text = req.query.text;
-  applyTranslation(text).then((data) => {
-    res.send(data);
-    console.log(data);
+  applyTranslation(text, res, (result, res) => {
+    res.send({ translatedText: result });
   });
 });

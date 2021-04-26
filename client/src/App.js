@@ -14,7 +14,6 @@ class App extends Component {
     // Call our fetch function below once the component mounts
     this.callBackendAPI()
       .then((res) => {
-        console.log(res);
         this.setState({ data: res.original, words: res.detailedSegments });
       })
       .catch((err) => console.log(err));
@@ -37,12 +36,13 @@ class App extends Component {
 
   render() {
     return (
-      <div class="article">
+      <div className="article">
         {this.state.words.map((item) => (
           <ToolTipButton
-            class="wordbutton"
+            className="wordbutton"
             word={item[0]}
             pronunciation={item[1]}
+            key={item[2]}
           />
         ))}
       </div>
@@ -64,7 +64,11 @@ async function callTranslationAPI(toTranslateText) {
   return body;
 }
 
-function ToolTipButton({ onSelected, word, pronunciation, definition }) {
+function format(definition) {
+  return definition.replace(/\W/g, "");
+}
+
+function ToolTipButton({ word, pronunciation }) {
   const [selected, setSelected] = React.useState(false);
   const [translation, setTranslation] = React.useState("");
   if (pronunciation === word || pronunciation === "") {
@@ -76,16 +80,23 @@ function ToolTipButton({ onSelected, word, pronunciation, definition }) {
         size="small"
         selected={selected}
         translation={translation}
+        value={word}
         onChange={() => {
           if (translation === "") {
             callTranslationAPI(word).then((res) => {
-              setTranslation(res["translatedText"]);
+              if (
+                res &&
+                res.translatedText &&
+                res.translatedText.basic &&
+                res.translatedText.basic.explains &&
+                res.translatedText.basic.explains.length > 0
+              )
+                setTranslation(format(res.translatedText.basic.explains[0]));
             });
           }
           setSelected(!selected);
         }}
       >
-        {/* selected should get definition of word from server */}
         {selected ? translation : word}
       </ToggleButton>
     </Tooltip>

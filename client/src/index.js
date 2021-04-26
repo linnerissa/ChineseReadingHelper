@@ -25,7 +25,6 @@ callBackendAPI()
       (document.getElementsByTagName("html")[0].innerHTML = body.original)
   )
   .then((body) => {
-    console.log(document.getElementsByClassName("main-left left"));
     ReactDOM.render(
       <React.StrictMode>
         <App />

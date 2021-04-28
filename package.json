@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "watch": "nodemon",
-    "heroku-postbuild": "cd client && yarn install && yarn run start"
+    "watch": "nodemon"
   },
   "author": "",
   "license": "ISC",
@@ -24,5 +23,8 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "translate": "^1.2.1"
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.6.0"
   }
 }

@@ -19,21 +19,15 @@ async function callBackendAPI() {
   return body;
 }
 
-callBackendAPI()
-  .then(
-    (body) =>
-      (document.getElementsByTagName("html")[0].innerHTML = body.original)
-  )
-  .then((body) => {
-    ReactDOM.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>,
-      document.getElementsByClassName("main-left left")[0]
-    );
-  });
+callBackendAPI().then((body) => {
+  document.getElementsByTagName("html")[0].innerHTML = body.original;
+  console.log(body);
+  ReactDOM.render(
+    <React.StrictMode>
+      <App body={body} />
+    </React.StrictMode>,
+    document.getElementsByClassName("main-left left")[0]
+  );
+});
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();

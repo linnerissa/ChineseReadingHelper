@@ -771,10 +771,9 @@ extsprintf@^1.2.0:
   resolved "https://registry.yarnpkg.com/extsprintf/-/extsprintf-1.4.0.tgz#e2689f8f356fad62cca65a3a91c5df5f9551692f"
   integrity sha1-4mifjzVvrWLMplo6kcXfX5VRaS8=
 
-fanyi@^5.0.1:
+"fanyi@https://github.com/linnerissa/fanyi/tarball/master":
   version "5.0.1"
-  resolved "https://registry.yarnpkg.com/fanyi/-/fanyi-5.0.1.tgz#b6d06f234dbe12554a7b30e6a0988a028d15b7ea"
-  integrity sha512-ZU4hCrVmeHXoaT/lZ2qji11EFIjMMQF0Ux4gwQXY5EQFYob3YHwzH1n2l6gEdxGT7RUEtv7tPdcUfdq2+woazg==
+  resolved "https://github.com/linnerissa/fanyi/tarball/master#42995908b71f133dcf3707d34bbe01a2fe43bc26"
   dependencies:
     chalk "^4.0.0"
     commander "^5.0.0"

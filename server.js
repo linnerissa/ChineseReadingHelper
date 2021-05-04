@@ -21,7 +21,6 @@ app.listen(port, () => console.log(`Listening on port ${port}`));
 var nodejieba = require("nodejieba");
 
 const getNewsSourceInChinese = async () => {
-  console.log("GetNewsSource");
   const fetch = require("node-fetch");
   article = await fetch(
     "http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm"
@@ -82,6 +81,7 @@ const applyTranslation = async (text, res, cb) => {
       say: false,
       color: false,
     },
+    undefined,
     (data) => {
       cb(data, res);
     }

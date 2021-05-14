@@ -20,13 +20,11 @@ async function callBackendAPI() {
 }
 
 callBackendAPI().then((body) => {
-  document.getElementsByTagName("html")[0].innerHTML = body.original;
-  console.log(body);
   ReactDOM.render(
     <React.StrictMode>
       <App body={body} />
     </React.StrictMode>,
-    document.getElementsByClassName("main-left left")[0]
+    document.getElementById("root")
   );
 });
 

@@ -37,8 +37,8 @@ const parseHTMLBody = (htmlBody) => {
   try {
     const $ = cheerio.load(htmlBody);
     const text = $.text($("p"));
-
-    return { parsed: text, original: htmlBody };
+    const title = $.text($("h1", "div.header.domPC"));
+    return { title: title, parsed: text, original: htmlBody };
   } catch (e) {
     console.log(e);
     throw e;
@@ -61,6 +61,7 @@ const segmentBody = (object) => {
     segments: segmentedBody,
     startIndices: startIndices,
     original: object["original"],
+    title: object["title"],
   };
 };
 
@@ -104,6 +105,7 @@ const applyPinYin = async (object) => {
   return {
     detailedSegments: segmentedBodyAndPinyin,
     original: object["original"],
+    title: object["title"],
   };
 };
 

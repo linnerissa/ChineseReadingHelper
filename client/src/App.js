@@ -6,7 +6,6 @@ import fetch from "node-fetch";
 
 class App extends Component {
   render() {
-    console.log("THIS IS THE HEADLINE", this.props.body.title);
     return (
       <div>
         <h1>{this.props.body.title}</h1>

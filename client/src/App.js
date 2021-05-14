@@ -7,15 +7,18 @@ import fetch from "node-fetch";
 class App extends Component {
   render() {
     return (
-      <div className="article">
-        {this.props.body.detailedSegments.map((item) => (
-          <ToolTipButton
-            className="wordbutton"
-            word={item[0]}
-            pronunciation={item[1]}
-            key={item[2]}
-          />
-        ))}
+      <div>
+        <h1>{this.props.body.title}</h1>
+        <div className="article">
+          {this.props.body.detailedSegments.map((item) => (
+            <ToolTipButton
+              className="wordbutton"
+              word={item[0]}
+              pronunciation={item[1]}
+              key={item[2]}
+            />
+          ))}
+        </div>
       </div>
     );
   }

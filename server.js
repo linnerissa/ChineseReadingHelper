@@ -20,11 +20,16 @@ app.listen(port, () => console.log(`Listening on port ${port}`));
 
 var nodejieba = require("nodejieba");
 
-const getNewsSourceInChinese = async () => {
-  const fetch = require("node-fetch");
-  article = await fetch(
+const getExampleSite = async () => {
+  article = await getNewsSource(
     "http://www.xinhuanet.com/politics/2021-02/17/c_1127107606.htm"
-  )
+  );
+  return article;
+};
+
+const getNewsSource = async (xinHuaNetURL) => {
+  const fetch = require("node-fetch");
+  article = await fetch(xinHuaNetURL)
     .then((data) => data.text())
     .catch((error) => {
       console.log("Failed to get news source in chinese", error);
@@ -110,7 +115,17 @@ const applyPinYin = async (object) => {
 };
 
 app.get("/news", (req, res) => {
-  getNewsSourceInChinese()
+  getExampleSite()
+    .then(parseHTMLBody)
+    .then(segmentBody)
+    .then(applyPinYin)
+    .then((data) => res.send(data));
+});
+
+app.get("/article", (req, res) => {
+  const url = req.query.url;
+  console.log("getting hit at article:", url);
+  getNewsSource(url) // figure out how to pass in this article
     .then(parseHTMLBody)
     .then(segmentBody)
     .then(applyPinYin)
